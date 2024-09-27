@@ -38,18 +38,7 @@ class CategoriesController extends Controller
          // Merge slug into the request data, using name to generate slug
     // Merge slug into the request data, using name to generate slug
 
-    $request->validate([
-        'name' =>'required|string|min:3|max:255',
-        'description' =>'required|string|min:3|max:255',
-
-        'parent_id' =>[
-            'nullable','int' => 'exists:categories,id'
-        ],
-        'image'=>[
-            'image','max:1048576','dimensions:min_width=100,min_height=100',
-        ],
-        'status' => 'in:active,archived',
-    ]);
+    $request->validate( Category::rules());
 
     $request->merge([
         'slug' => Str::slug($request->post('name'))
@@ -71,9 +60,9 @@ class CategoriesController extends Controller
      */
     public function show(string $id)
     {
-        //
+        $category = Category::findOrFail($id);
+        return view('dashboard.categories.show', compact('category'));
     }
-
     /**
      * Show the form for editing the specified resource.
      */
@@ -101,17 +90,7 @@ class CategoriesController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $request->validate([
-            'name' =>'required|string|min:3|max:255',
-            'description' =>'required|string|min:3|max:255',
-
-            'parent_id' =>[
-                'nullable','int' => 'exists:categories,id'
-            ],
-            'image'=>[
-                'image','max:1048576','dimensions:min_width=100,min_height=100',
-            ],
-        ]);
+        $request->validate(Category::rules($id));
 
 
         $category = Category::findOrFail($id);

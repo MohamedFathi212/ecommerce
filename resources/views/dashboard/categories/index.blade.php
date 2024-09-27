@@ -63,6 +63,11 @@
                     <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
                 </form>
             </td>
+
+            <td>
+                <a href="{{route('dashboard.categories.show',$category->id) }}" class="btn btn-sm btn-outline-success">show</a>
+            </td>
+
         </tr>
         @empty
         <tr>

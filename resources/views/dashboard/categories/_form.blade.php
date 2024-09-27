@@ -22,7 +22,7 @@
 <div class="form-group">
     <label for="parent_id">Category Parent</label>
     <select name="parent_id" class="form-control form-select " id="parent_id">
-        <option value="" disabled >No Category </option>
+        <option value="" >No Category </option>
         @foreach ($parents as $parent)
             <option value="{{ $parent->id }}" @selected(old('parent_id', $category->parent_id) == $parent->id)>{{ $parent->name }}</option>
         @endforeach
