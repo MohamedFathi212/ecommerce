@@ -11,19 +11,11 @@ class Store extends Model
 
     const CREATED_AT = 'created_at';
     const UPDATED_AT = 'updated_at';
-
-
     protected $connection = 'mysql';  // MySQL connection in case of  more name of databases
     protected $table = 'stores';
-
     protected $primaryKey = 'id';
-
     protected $keyType = 'int';
-
     public $incrementing = true;
     public $timestamps = true;
-
-
-
 
 }
