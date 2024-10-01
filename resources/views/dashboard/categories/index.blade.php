@@ -13,25 +13,7 @@
     <a href="{{route('dashboard.categories.create')}}" class="btn btn-sm btn-outline-primary">Create</a>
 </div>
 
-
-@if(session()->has('success'))
-    <div class="alert alert-success">
-        {{session('success') }}
-    </div>
-@endif
-
-@if(session()->has('error'))
-    <div class="alert alert-danger">
-        {{session('error') }}
-    </div>
-@endif
-
-@if(session()->has('info'))
-    <div class="alert alert-info">
-        {{session('info') }}
-    </div>
-@endif
-
+<x-alert  />
 
 
 <table class="table">
@@ -42,6 +24,9 @@
             <th>Parent</th>
             <th>Image</th>
             <th>Created At</th>
+            <th>Edit</th>
+            <th>Delete</th>
+            <th>Show</th>
             <th colspan="2"></th>
         </tr>
     </thead>

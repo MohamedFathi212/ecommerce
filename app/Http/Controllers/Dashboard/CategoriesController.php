@@ -19,9 +19,6 @@ class CategoriesController extends Controller
         return view('dashboard.categories.index', compact('categories'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
         $parents = Category::all();
@@ -29,134 +26,100 @@ class CategoriesController extends Controller
         return view('dashboard.categories.create', compact('parents', 'category'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        // لو عاوز تتحكم في اسم الملف بنكتب storeAs(اسم الفولد اللي هخزن فيه + الاسم اللي هتتحكم في اسم الصورة )
-         // Merge slug into the request data, using name to generate slug
-    // Merge slug into the request data, using name to generate slug
+        $request->validate(Category::rules(), [
+            'name.required' => 'This field is required',
+            'name.unique' => 'This word has already been taken',
+            'description.required' => 'Description is required',
+            'image.image' => 'The file must be an image',
+        ]);
 
-    $request->validate( Category::rules());
+        $request->merge([
+            'slug' => Str::slug($request->post('name'))
+        ]);
 
-    $request->merge([
-        'slug' => Str::slug($request->post('name'))
-    ]);
+        $data = $request->except('image');
+        $data['image'] = $this->uploadImage($request);
 
-    $data = $request->except('image');
-    $data['image'] = $this->uploadImage($request);
+        Category::create($data);
 
-    // Create the category with mass assignment
-    $category = Category::create($data);
+        return redirect()->route('dashboard.categories.index')
+            ->with('success', 'Category Created Successfully');
+    }
 
-    // Redirect with success message
-    return redirect()->route('dashboard.categories.index')
-    ->with('success', 'Category Created Successfully');
- }
-
-    /**
-     * Display the specified resource.
-     */
     public function show(string $id)
     {
         $category = Category::findOrFail($id);
         return view('dashboard.categories.show', compact('category'));
     }
-    /**
-     * Show the form for editing the specified resource.
-     */
+
     public function edit(string $id)
     {
+        $category = Category::findOrFail($id);
 
-
-        try {
-            $category = Category::findOrFail($id);
-        } catch (ModelNotFoundException $e) {
-            return redirect()->route('dashboard.categories.index')->with('info', 'Category Not Found');
-        }
-
-        // Get all categories except the one being edited and its potential child
+        // Get all categories except the one being edited and its children
         $parents = Category::where('id', '<>', $id)
-        ->whereNull('parent_id')
-        ->orwhere('parent_id', '<>', $id)
-        ->get();
+            ->where(function ($query) use ($id) {
+                $query->whereNull('parent_id')
+                    ->orWhere('parent_id', '<>', $id);
+            })->get();
 
         return view('dashboard.categories.edit', compact('category', 'parents'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, string $id)
     {
         $request->validate(Category::rules($id));
-
 
         $category = Category::findOrFail($id);
 
         $old_image = $category->image;
         $data = $request->except('image');
 
-        $data['image'] = $this->uploadImage($request);
+        $new_image = $this->uploadImage($request);
 
-        // Update the category with validated data
+        if ($new_image) {
+            $data['image'] = $new_image;
+        }
+
         $category->update($data);
 
-        if($old_image && isset($data['image'])){
+        if ($old_image && $new_image) {
             Storage::disk('public')->delete($old_image);
         }
 
         return redirect()->route('dashboard.categories.index')
             ->with('success', 'Category Updated Successfully');
-            //         $category = Category::findorFail($id);
-//         $category->update($request->all());
-
-//         return redirect()->route('dashboard.categories.index')
-//         ->with('success', 'Category Updated Successfully');
-
-
-//         // $category = new Category(); // يوجد فرق بينها وما بين اللي فيهاا find($id)  بيكون ساعتها $exists => false في هذه الحاله ام في حاله الا edit بتكوكن true
-//         // $category->name=$request->name;
-//         // $category->parent_id=$request->parent_id;
-//         // $category->save();
-
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(string $id)
     {
         $category = Category::findOrFail($id);
-        $category->delete();
 
-        if($category->image){
+        if ($category->image) {
             Storage::disk('public')->delete($category->image);
         }
-        // Check if category has children, handle or notify accordingly (optional)
-        // e.g., Category::where('parent_id', $id)->update(['parent_id' => null]);
 
+        $category->delete();
 
         return redirect()->route('dashboard.categories.index')
             ->with('error', 'Category Deleted Successfully');
     }
 
-
-    protected function uploadImage(Request $request)
+    protected function uploadImage(Request $request): ?string
     {
-        if(!$request->hasFile('image')){
-            return;
+        if (!$request->hasFile('image')) {
+            return null;
         }
 
-            $file= $request->file('image'); // uploadefile object
+        $file = $request->file('image'); // UploadedFile object
 
-            $path = $file->store('uploads',[
-                'disk' =>'public'
-            ]);
-            return $path;
-        }
+        return $file->store('uploads', [
+            'disk' => 'public'
+        ]);
     }
+}
 
 
 // $file->getClientMimeType();
